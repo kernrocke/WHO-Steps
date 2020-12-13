@@ -11,7 +11,7 @@ cls
 **	Sub-Project:	Regional Active Commuting WHO STEPS
 **  Analyst:		Kern Rocke
 **	Date Created:	11/12/2020
-**	Date Modified: 	11/12/2020
+**	Date Modified: 	12/12/2020
 **  Algorithm Task: Cancer Screening Across Caribbean countries using WHO STEPS
 
 *Country analaysis
@@ -198,34 +198,63 @@ label var breast "Breast Cancer Screening"
 label define breast 0"No Breast exam" 1"Breast Exam"
 label value breast breast
 
+*Cervical Cancer screeing (Pap smear)
+gen cervical = . 
+replace cervical = 1 if s7 == 1 | s7 == 2 | s7 == 3 | w7 == 1 | w7 == 2 | w7 == 3
+replace cervical = 0 if s7 == 4 | s7 == 77 | w7 == 7 | w7 == 9 | w7 == 4
+label var cervical "Cervical Cancer Screening"
+label define cervical 0"No pap smear" 1"Pap smear"
+label value cervical cervical
+
 proportion crc_screen, over(country) // both male and female
 proportion prostate if gender == 1, over(country) // male
 proportion breast if gender == 2, over(country) // female
+proportion cervical if gender == 2, over(country) // female
 
 *Convert proportions to percentages
 replace crc_screen = crc_screen * 100
 replace prostate = prostate * 100
 replace breast = breast * 100
+replace cervical = cervical * 100
 
 
 *Create clustered Bar chart of Breast, Prostate and Colorectal cancer screening
 
 #delimit;
 
-	graph hbar (mean) breast prostate crc_screen
+	graph hbar (mean) breast prostate crc_screen cervical
 	
 	, 
 	
-	over(country)
+	 over(country, relabel(1"Bahamas"
+						   2"Barbados"
+						   3"BVI"
+						   4"Cayman Islands"
+						   5"Grenada"
+						   6"Guyana"))
 	
 	 plotregion(c(gs16) ic(gs16) ilw(thin) lw(thin)) 
      graphregion(color(gs16) ic(gs16) ilw(thin) lw(thin)) 
      bgcolor(white) 
-     ysize(20) xsize(20)
 	 
 	 bar(1, bc(pink*0.65) blw(vthin) blc(gs0))
 	 bar(2, bc(blue*0.65) blw(vthin) blc(gs0))
 	 bar(3, bc(green*0.65) blw(vthin) blc(gs0))
+	 bar(4, bc(orange*0.65) blw(vthin) blc(gs0))
+	 
+	 blabel(bar, format(%9.0f) pos(outside) size(small))
+	 
+	 ylab(, nogrid )
+	 ytitle("Percentage (%)", margin(t=0.5) size(medium)) 
+	 
+	 legend(size(medium)  cols(2)
+				region(fcolor(gs16) lw(vthin) margin(l=2 r=2 t=2 b=2)) 
+				order(1 2 3 4)
+				lab(1 "Breast")
+				lab(2 "Prostate")
+				lab(3 "CRC")
+				lab(4 "Cervical")
+				)
 	 
 	;
 #delimit cr
